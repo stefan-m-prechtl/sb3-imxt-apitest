@@ -27,7 +27,7 @@ class PingResourceTest extends AbstractApiTest
 	@DisplayName("GET /ping: OK")
 	void pingOk() throws IOException, InterruptedException
 	{
-		final JsonObject jsonContent = this.doGET("", HttpStatusCode.OK);
+		final JsonObject jsonContent = this.doGETJsonObject("", HttpStatusCode.OK);
 
 		assertAll("Verify meta data", //
 				() -> assertThat(jsonContent).isNotNull(), //
@@ -41,9 +41,9 @@ class PingResourceTest extends AbstractApiTest
 	@DisplayName("GET /ping/reader: OK")
 	void pingReaderOk() throws IOException, InterruptedException
 	{
-		this.login("read", "geheim123");
+		this.loginAsReader();
 
-		final JsonObject jsonContent = this.doGET("/reader", HttpStatusCode.OK);
+		final JsonObject jsonContent = this.doGETJsonObject("/reader", HttpStatusCode.OK);
 
 		assertAll("Verify meta data", //
 				() -> assertThat(jsonContent).isNotNull(), //
@@ -57,9 +57,9 @@ class PingResourceTest extends AbstractApiTest
 	@DisplayName("GET /ping/writer: OK")
 	void pingWriterOk() throws IOException, InterruptedException
 	{
-		this.login("write", "geheim123");
+		this.loginAsWriter();
 
-		final JsonObject jsonContent = this.doGET("/writer", HttpStatusCode.OK);
+		final JsonObject jsonContent = this.doGETJsonObject("/writer", HttpStatusCode.OK);
 
 		assertAll("Verify meta data", //
 				() -> assertThat(jsonContent).isNotNull(), //
@@ -73,9 +73,9 @@ class PingResourceTest extends AbstractApiTest
 	@DisplayName("GET /ping/admin: OK")
 	void pingAdminOk() throws IOException, InterruptedException
 	{
-		this.login("admin", "geheim123");
+		this.loginAsAdmin();
 
-		final JsonObject jsonContent = this.doGET("/admin", HttpStatusCode.OK);
+		final JsonObject jsonContent = this.doGETJsonObject("/admin", HttpStatusCode.OK);
 
 		assertAll("Verify meta data", //
 				() -> assertThat(jsonContent).isNotNull(), //
@@ -89,7 +89,7 @@ class PingResourceTest extends AbstractApiTest
 	@DisplayName("GET /ping: wrong URL extension")
 	void pingWrongUrl() throws IOException, InterruptedException
 	{
-		final JsonObject jsonContent = this.doGET("/all", HttpStatusCode.NOT_FOUND);
+		final JsonObject jsonContent = this.doGETJsonObject("/all", HttpStatusCode.NOT_FOUND);
 		this.assertAllExeption(jsonContent);
 	}
 
@@ -98,9 +98,9 @@ class PingResourceTest extends AbstractApiTest
 	@DisplayName("GET /ping/writer: wrong user")
 	void pingWriterWrongUser() throws IOException, InterruptedException
 	{
-		this.login("read", "geheim123");
+		this.loginAsReader();
 
-		final JsonObject jsonContent = this.doGET("/writer", HttpStatusCode.FORBIDDEN);
+		final JsonObject jsonContent = this.doGETJsonObject("/writer", HttpStatusCode.FORBIDDEN);
 		this.assertAllExeption(jsonContent);
 	}
 
