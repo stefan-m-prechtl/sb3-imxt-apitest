@@ -4,34 +4,115 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpClient.Version;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
+import jakarta.json.JsonObject;
 
 @DisplayName("REST-API Ping")
-public class PingResourceTest
+@TestMethodOrder(OrderAnnotation.class)
+class PingResourceTest extends AbstractApiTest
 {
-	private final static String APPLICATION_JSON = "application/json;charset=UTF-8";
+	PingResourceTest()
+	{
+		super("ping");
+	}
 
 	@Test
-	void ping() throws IOException, InterruptedException
+	@Order(10)
+	@DisplayName("GET /ping: OK")
+	void pingOk() throws IOException, InterruptedException
 	{
-		final HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).connectTimeout(Duration.ofSeconds(3)).build();
-
-		final var request = HttpRequest.newBuilder().uri(URI.create("http://localhost:9090/imxt/ping")).header("Content-Type", "application/json").GET().build();
-		final var res = client.send(request, HttpResponse.BodyHandlers.ofString());
+		final JsonObject jsonContent = this.doGET("", HttpStatusCode.OK);
 
 		assertAll("Verify meta data", //
-				() -> assertThat(res).isNotNull(), //
-				() -> assertThat(res.statusCode()).isEqualTo(200), //
-				() -> assertThat(res.headers().allValues("content-type")).isNotEmpty(), //
-				() -> assertThat(res.headers().allValues("content-type")).contains(APPLICATION_JSON) //
+				() -> assertThat(jsonContent).isNotNull(), //
+				() -> assertThat(jsonContent).containsKey("msg"), //
+				() -> assertThat(jsonContent).containsKey("ts")//
+		);
+	}
+
+	@Test
+	@Order(11)
+	@DisplayName("GET /ping/reader: OK")
+	void pingReaderOk() throws IOException, InterruptedException
+	{
+		this.login("read", "geheim123");
+
+		final JsonObject jsonContent = this.doGET("/reader", HttpStatusCode.OK);
+
+		assertAll("Verify meta data", //
+				() -> assertThat(jsonContent).isNotNull(), //
+				() -> assertThat(jsonContent).containsKey("msg"), //
+				() -> assertThat(jsonContent).containsKey("ts")//
+		);
+	}
+
+	@Test
+	@Order(12)
+	@DisplayName("GET /ping/writer: OK")
+	void pingWriterOk() throws IOException, InterruptedException
+	{
+		this.login("write", "geheim123");
+
+		final JsonObject jsonContent = this.doGET("/writer", HttpStatusCode.OK);
+
+		assertAll("Verify meta data", //
+				() -> assertThat(jsonContent).isNotNull(), //
+				() -> assertThat(jsonContent).containsKey("msg"), //
+				() -> assertThat(jsonContent).containsKey("ts")//
+		);
+	}
+
+	@Test
+	@Order(13)
+	@DisplayName("GET /ping/admin: OK")
+	void pingAdminOk() throws IOException, InterruptedException
+	{
+		this.login("admin", "geheim123");
+
+		final JsonObject jsonContent = this.doGET("/admin", HttpStatusCode.OK);
+
+		assertAll("Verify meta data", //
+				() -> assertThat(jsonContent).isNotNull(), //
+				() -> assertThat(jsonContent).containsKey("msg"), //
+				() -> assertThat(jsonContent).containsKey("ts")//
+		);
+	}
+
+	@Test
+	@Order(20)
+	@DisplayName("GET /ping: wrong URL extension")
+	void pingWrongUrl() throws IOException, InterruptedException
+	{
+		final JsonObject jsonContent = this.doGET("/all", HttpStatusCode.NOT_FOUND);
+		this.assertAllExeption(jsonContent);
+	}
+
+	@Test
+	@Order(21)
+	@DisplayName("GET /ping/writer: wrong user")
+	void pingWriterWrongUser() throws IOException, InterruptedException
+	{
+		this.login("read", "geheim123");
+
+		final JsonObject jsonContent = this.doGET("/writer", HttpStatusCode.FORBIDDEN);
+		this.assertAllExeption(jsonContent);
+	}
+
+	private void assertAllExeption(final JsonObject jsonContent)
+	{
+		assertAll("Verify meta data", //
+				() -> assertThat(jsonContent).isNotNull(), //
+				() -> assertThat(jsonContent).containsKey("timestamp"), //
+				() -> assertThat(jsonContent).containsKey("status"), //
+				() -> assertThat(jsonContent).containsKey("exception"), //
+				() -> assertThat(jsonContent).containsKey("message"), //
+				() -> assertThat(jsonContent).containsKey("path") //
 		);
 	}
 }
