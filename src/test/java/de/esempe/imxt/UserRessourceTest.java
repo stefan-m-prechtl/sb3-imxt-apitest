@@ -21,6 +21,7 @@ import jakarta.json.JsonObject;
 class UserRessourceTest extends AbstractApiTest
 {
 	private String locationOfCreatedUser;
+	private JsonObject jsonFirstUser;
 
 	UserRessourceTest()
 	{
@@ -40,6 +41,9 @@ class UserRessourceTest extends AbstractApiTest
 				() -> assertThat(jsonContent).isNotNull(), //
 				() -> assertThat(jsonContent).hasSizeGreaterThanOrEqualTo(3) //
 		);
+
+		this.jsonFirstUser = (JsonObject) jsonContent.get(0);
+
 	}
 
 	@Test
@@ -47,7 +51,8 @@ class UserRessourceTest extends AbstractApiTest
 	@DisplayName("GET /user/{id}: OK")
 	void readOneUsersOk() throws IOException, InterruptedException
 	{
-		final JsonObject jsonContent = this.doGETJsonObject("/1", HttpStatusCode.OK);
+		final String pathExtentions = "/" + this.jsonFirstUser.getString("id");
+		final JsonObject jsonContent = this.doGETJsonObject(pathExtentions, HttpStatusCode.OK);
 		System.out.println(jsonContent);
 
 		assertAll("Verify meta data", //
@@ -105,7 +110,7 @@ class UserRessourceTest extends AbstractApiTest
 	private JsonObject createEntity(final String username, final String firstname, final String lastname)
 	{
 		final var result = Json.createObjectBuilder() //
-				.add("objid", UUID.randomUUID().toString()) //
+				.add("id", UUID.randomUUID().toString()) //
 				.add("name", username) //
 				.add("firstname", firstname) //
 				.add("lastname", lastname) //
